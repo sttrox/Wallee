@@ -73,10 +73,12 @@ namespace Wallee.ViewModels
         {
             TextSearch = (string) text;
 
+
             if (ServiceNavigationSpaceImages.CurrentViewModel is ViewModelMorePhoto moorePhoto)
             {
-                var d = (ViewModelMorePhoto)moorePhoto.Clone();
+                var d = (ViewModelMorePhoto) moorePhoto.Clone();
                 var isConnectInternet = await moorePhoto.SearchByText(TextSearch);
+                // var isConnectInternet = moorePhoto.SearchByText(TextSearch);
                 if (!isConnectInternet)
                     ServiceNavigationSpaceImages.OpenViewModel(new ViewModelLostConnection());
                 else
@@ -93,7 +95,8 @@ namespace Wallee.ViewModels
             {
                 var s = new ViewModelMorePhoto(serviceSetting, ButtonSearch_OnClick, ServiceNavigationSpaceImages);
                 //
-                var isConnectInternet = await s.SearchByText(TextSearch);
+                var isConnectInternet = await  s.SearchByText(TextSearch);
+                // var isConnectInternet = s.SearchByText(TextSearch);
 
                 if (ServiceNavigationSpaceImages.CurrentViewModel is ViewModelLostConnection)
                 {

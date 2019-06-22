@@ -1,10 +1,12 @@
 ﻿using Didaktika.MVVM;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using StyleFluentWpf.CustomControls.ControlNavigation;
 using Unsplasharp.Models;
@@ -155,11 +157,14 @@ namespace Wallee.ViewModels
 
         public async Task<bool> SearchByText(string textSearch)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             foreach (var listColumn in ListColumns)
             {
                 listColumn.Clear();
             }
 
+            Console.WriteLine("1 --" + stopwatch.ElapsedMilliseconds);
 
             if (RemoveTile != null)
             {
@@ -167,6 +172,7 @@ namespace Wallee.ViewModels
                 RemoveTile = null;
             }
 
+            Console.WriteLine("2 --" + stopwatch.ElapsedMilliseconds);
             if (ListTags.Any(tile => tile.TextSearch.ToLower() == LastQuery.ToLower()))
             {
                 var tileFind = ListTags.First(tile => tile.TextSearch.ToLower() == LastQuery.ToLower());
@@ -174,16 +180,21 @@ namespace Wallee.ViewModels
                 ListTags.Remove(tileFind);
             }
 
+            Console.WriteLine("3 --" + stopwatch.ElapsedMilliseconds);
+
             Console.WriteLine("Click");
 
             LastQuery = textSearch;
-
             var columnsPhoto = await ServiceUnsplash.GetPhoto(numPage, LastQuery);
+            Console.WriteLine("3.1 --" + stopwatch.ElapsedMilliseconds);
+
             if (!columnsPhoto.Any())
                 if (await ServiceUnsplash.client.GetRandomPhoto() == null)
                     return false;
+
+            Console.WriteLine("4 --" + stopwatch.ElapsedMilliseconds);
             //if (columnsPhoto.Count() == 0) return;
-            var columns = await GetAddedInColumns(columnsPhoto);
+            var columns = await Task.Run(() => GetAddedInColumns(columnsPhoto));
             //if (columnsPhoto.Count() == 0) return false;
             for (int i = 0; i < countColumns; i++)
             {
@@ -193,6 +204,8 @@ namespace Wallee.ViewModels
                 ListColumns[i].AddRange(columns[i]);
             }
 
+            Console.WriteLine("5 --" + stopwatch.ElapsedMilliseconds);
+            
             //ListColumns[0].AddRange(columnsPhoto);
             //OnPropertyChanged(nameof(ListColumns));
             Console.WriteLine("completed");

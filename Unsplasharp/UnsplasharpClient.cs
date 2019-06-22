@@ -7,6 +7,8 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Unsplasharp.Models;
 using System.Linq;
+using System.Threading;
+using System.Windows.Documents;
 
 namespace Unsplasharp
 {
@@ -947,37 +949,54 @@ namespace Unsplasharp
         /// <returns>A list of photos found.</returns>
         public async Task<List<Photo>> FetchSearchPhotosList(string url)
         {
-            var listPhotos = new List<Photo>();
             try
             {
                 Stopwatch st = new Stopwatch();
                 st.Start();
+                Console.WriteLine("3.1.1_" + st.ElapsedMilliseconds + "_" +
+                                  Thread.CurrentThread.GetHashCode().ToString("X"));
                 var responseBodyAsText = await Fetch(url);
+                Console.WriteLine("3.1.2_" + st.ElapsedMilliseconds + "_" +
+                                  Thread.CurrentThread.GetHashCode().ToString("X"));
 
-                await Task.Run(() => t(responseBodyAsText));
+                var k = await t(responseBodyAsText);
+                Console.WriteLine("3.1.3_" + st.ElapsedMilliseconds + "_" +
+                                  Thread.CurrentThread.GetHashCode().ToString("X"));
+                return k;
                 Console.WriteLine("1/end/" + nameof(FetchSearchPhotosList) + '/' + st.ElapsedMilliseconds);
-                return listPhotos;
             }
             catch (Exception hre)
             {
                 LastPhotosSearchTotalResults = 0;
                 LastPhotosSearchTotalPages = 0;
-                return listPhotos;
+                return new List<Photo>();
             }
 
-            void t(string responseBodyAsText)
+            async Task<List<Photo>> t(string responseBodyAsText)
             {
-                var data = JObject.Parse(responseBodyAsText);
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                Console.WriteLine("3.1.2.1_"+stopwatch.ElapsedMilliseconds+"_" + Thread.CurrentThread.GetHashCode().ToString("X"));
+                var data = await Task.Run(() => JObject.Parse(responseBodyAsText));
                 var results = (JArray) data["results"];
+                Console.WriteLine("3.1.2.2_" + stopwatch.ElapsedMilliseconds + "_" + Thread.CurrentThread.GetHashCode().ToString("X"));
 
-                LastPhotosSearchTotalResults = (int) data["total"];
-                LastPhotosSearchTotalPages = (int) data["total_pages"];
-
-                foreach (JObject item in results)
+                //LastPhotosSearchTotalResults = (int) data["total"];
+                //LastPhotosSearchTotalPages = (int) data["total_pages"];
+                return await Task.Run(() =>
                 {
-                    var photo = ExtractPhoto(item);
-                    listPhotos.Add(photo);
-                }
+                    var listPhotost = new List<Photo>();
+                    Console.WriteLine("3.1.2.3_" + stopwatch.ElapsedMilliseconds + "_" + Thread.CurrentThread.GetHashCode().ToString("X"));
+
+                    foreach (JObject item in results)
+                    {
+                        var photo = ExtractPhoto(item);
+                        listPhotost.Add(photo);
+                        Console.WriteLine(item.Path + "_" + Thread.CurrentThread.GetHashCode().ToString("X"));
+                    }
+                    Console.WriteLine("3.1.2.4_" + stopwatch.ElapsedMilliseconds + "_" + Thread.CurrentThread.GetHashCode().ToString("X"));
+
+                    return listPhotost;
+                });
             }
         }
 
